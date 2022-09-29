@@ -1,6 +1,7 @@
 package net.azisaba.guildchatdiscord
 
 import dev.kord.common.entity.Snowflake
+import dev.kord.rest.builder.message.AllowedMentionsBuilder
 import dev.kord.rest.request.RestRequestException
 import dev.kord.rest.service.RestClient
 import kotlinx.coroutines.runBlocking
@@ -44,6 +45,7 @@ object InterChatPacketListener : PacketListener {
                         try {
                             restClient.webhook.executeWebhook(Snowflake(webhookId.toULong()), webhookToken) {
                                 content = plainText
+                                allowedMentions = AllowedMentionsBuilder()
                             }
                         } catch (e: RestRequestException) {
                             if (e.status.code == 404) {
