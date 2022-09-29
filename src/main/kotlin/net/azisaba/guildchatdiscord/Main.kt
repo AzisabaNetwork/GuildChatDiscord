@@ -19,7 +19,6 @@ import net.azisaba.interchat.api.network.Protocol
 import net.azisaba.interchat.api.network.protocol.GuildMessagePacket
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.util.UUID
 
 private val logger = LoggerFactory.getLogger("GuildChatDiscord")
 
@@ -48,32 +47,13 @@ suspend fun main() {
 
     client.on<MessageCreateEvent> {
         if (message.author?.isBot != false) return@on
-        InterChatDiscord.asyncExecutor.execute {
-            val minecraftUuid = DatabaseManager.query("SELECT `minecraft_uuid` FROM `users` WHERE `discord_id` = ?") {
-                it.setLong(1, message.author!!.id.value.toLong())
-                it.executeQuery().use { rs ->
-                    if (rs.next()) {
-                        UUID.fromString(rs.getString("minecraft_uuid"))
-                    } else {
-                        null
-                    }
-                }
-            } ?: return@execute
-            val guildId = DatabaseManager.query("SELECT `guild_id` FROM `channels` WHERE `channel_id` = ?") {
-                it.setLong(1, message.channelId.value.toLong())
-                it.executeQuery().use { rs ->
-                    if (rs.next()) {
-                        rs.getLong("guild_id")
-                    } else {
-                        null
-                    }
-                }
-            } ?: return@execute
-            val isMember = InterChatDiscord.guildManager.getMember(guildId, minecraftUuid).exceptionally { null }.join() != null
-            if (!isMember) return@execute
-            val packet = GuildMessagePacket(guildId, "Discord", minecraftUuid, message.content, null)
-            JedisBoxProvider.get().pubSubHandler.publish(Protocol.GUILD_MESSAGE.name, packet)
-        }
+        val guildId = DatabaseManager.getGuildIdByChannelId(message.channelId.value.toLong()) ?: return@on
+        val minecraftUuid = DatabaseManager.getMinecraftUUIDByDiscordId(message.author!!.id.value.toLong()) ?: return@on
+        // return if the author is not member of the guild
+        InterChatDiscord.guildManager.getMember(guildId, minecraftUuid).exceptionally { null }.join() ?: return@on
+        // send packet
+        val packet = GuildMessagePacket(guildId, "Discord", minecraftUuid, message.content, null)
+        JedisBoxProvider.get().pubSubHandler.publish(Protocol.GUILD_MESSAGE.name, packet)
     }
 
     client.on<ApplicationCommandInteractionCreateEvent> {

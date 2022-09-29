@@ -5,6 +5,7 @@ import net.azisaba.interchat.api.util.Functions
 import net.azisaba.interchat.api.util.QueryExecutor
 import org.intellij.lang.annotations.Language
 import java.sql.PreparedStatement
+import java.util.UUID
 
 object DatabaseManager {
     val interChatQueryExecutor = QueryExecutor { sql, action -> queryInterChat(sql) { stmt -> action.accept(stmt) } }
@@ -42,6 +43,32 @@ object DatabaseManager {
                     list.add(rs.getLong("webhook_id") to rs.getString("webhook_token"))
                 }
                 list
+            }
+        }
+    }.toKotlin()
+
+    val getGuildIdByChannelId: (Long) -> Long? = Functions.memoize<Long, Long>(1000 * 60) { channelId ->
+        query("SELECT `guild_id` FROM `channels` WHERE `channel_id` = ?") {
+            it.setLong(1, channelId)
+            it.executeQuery().use { rs ->
+                if (rs.next()) {
+                    rs.getLong("guild_id")
+                } else {
+                    null
+                }
+            }
+        }
+    }.toKotlin()
+
+    val getMinecraftUUIDByDiscordId: (Long) -> UUID? = Functions.memoize<Long, UUID>(1000 * 30) { discordId ->
+        query("SELECT `minecraft_uuid` FROM `users` WHERE `discord_id` = ?") {
+            it.setLong(1, discordId)
+            it.executeQuery().use { rs ->
+                if (rs.next()) {
+                    UUID.fromString(rs.getString("minecraft_uuid"))
+                } else {
+                    null
+                }
             }
         }
     }.toKotlin()
