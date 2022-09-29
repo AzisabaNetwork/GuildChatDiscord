@@ -25,7 +25,7 @@ object InterChatPacketListener : PacketListener {
         val guildFuture = InterChatDiscord.guildManager.fetchGuildById(packet.guildId())
         val userFuture = InterChatDiscord.userManager.fetchUser(packet.sender())
         AsyncUtil.collectAsync(guildFuture, userFuture) { guild, user ->
-            if (guild == null || user == null || !guild.deleted()) {
+            if (guild == null || user == null || guild.deleted()) {
                 return@collectAsync
             }
             val formattedText = MessageFormatter.format(
