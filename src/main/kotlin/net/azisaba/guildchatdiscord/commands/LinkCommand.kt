@@ -45,6 +45,7 @@ object LinkCommand : CommandHandler {
             stmt.setString(2, code)
             stmt.executeUpdate()
         }
+        DatabaseManager.getMinecraftUUIDByDiscordId.forget(interaction.user.id.value.toLong())
         interaction.respondEphemeral { content = "`$name` (`$uuid`)と連携しました。" }
     }
 

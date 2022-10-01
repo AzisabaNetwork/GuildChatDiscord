@@ -39,21 +39,45 @@ object InterChatPacketListener : PacketListener {
             )
             val formattedComponent = LEGACY_COMPONENT_SERIALIZER.deserialize(formattedText)
             val plainText = PLAIN_TEXT_COMPONENT_SERIALIZER.serialize(formattedComponent)
-            DatabaseManager.getWebhooksByGuildId(packet.guildId()).forEach { (webhookId, webhookToken) ->
+            val members = guild.members.join()
+            DatabaseManager.getWebhooksByGuildId(packet.guildId()).forEach { info ->
                 InterChatDiscord.asyncExecutor.execute {
                     runBlocking {
+                        // make sure that member is still in the guild
+                        val uuid = DatabaseManager.getMinecraftUUIDByDiscordId(info.createdUserId)
+                        if (uuid == null || members.all { it.uuid() != uuid }) {
+                            // delete webhook
+                            InterChatDiscord.logger.info("Removing webhook ${info.webhookId} because the user is not in the guild")
+                            try {
+                                restClient.webhook.deleteWebhook(
+                                    Snowflake(info.webhookId.toULong()),
+                                    "${info.createdUserId} was removed from the guild"
+                                )
+                            } catch (e: Exception) {
+                                InterChatDiscord.logger.info("Failed to delete webhook", e)
+                            }
+                            DatabaseManager.query("DELETE FROM `channels` WHERE `webhook_id` = ?") {
+                                it.setLong(1, info.webhookId)
+                                it.executeUpdate()
+                            }
+                            DatabaseManager.getWebhooksByGuildId.forget(packet.guildId())
+                            return@runBlocking
+                        }
+                        // execute webhook
                         try {
-                            restClient.webhook.executeWebhook(Snowflake(webhookId.toULong()), webhookToken) {
+                            restClient.webhook.executeWebhook(Snowflake(info.webhookId.toULong()), info.webhookToken) {
                                 content = plainText
                                 allowedMentions = AllowedMentionsBuilder()
                             }
                         } catch (e: RestRequestException) {
-                            if (e.status.code == 404) {
-                                // webhook is gone
+                            if (e.status.code == 404 || e.status.code == 403) {
+                                // invalid webhook url?
+                                InterChatDiscord.logger.info("Removing webhook ${info.webhookId} because it is invalid (404 or 403)")
                                 DatabaseManager.query("DELETE FROM `channels` WHERE `webhook_id` = ?") {
-                                    it.setLong(1, webhookId)
+                                    it.setLong(1, info.webhookId)
                                     it.executeUpdate()
                                 }
+                                DatabaseManager.getWebhooksByGuildId.forget(packet.guildId())
                             }
                         }
                     }

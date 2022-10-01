@@ -29,25 +29,30 @@ object DatabaseManager {
                 `channel_id` BIGINT NOT NULL UNIQUE,
                 `webhook_id` BIGINT NOT NULL,
                 `webhook_token` VARCHAR(128) NOT NULL,
+                `created_user_id` BIGINT NOT NULL,
                 UNIQUE KEY `webhook` (`webhook_id`, `webhook_token`)
             )
         """.trimIndent()) { it.executeUpdate() }
     }
 
-    val getWebhooksByGuildId = Functions.memoize<Long, List<Pair<Long, String>>>(1000 * 60) { guildId ->
-        query("SELECT `webhook_id`, `webhook_token` FROM `channels` WHERE `guild_id` = ?") {
+    val getWebhooksByGuildId = Functions.memoize<Long, List<WebhookInfo>>(1000 * 60) { guildId ->
+        query("SELECT `webhook_id`, `webhook_token`, `created_user_id` FROM `channels` WHERE `guild_id` = ?") {
             it.setLong(1, guildId)
             it.executeQuery().use { rs ->
-                val list = mutableListOf<Pair<Long, String>>()
+                val list = mutableListOf<WebhookInfo>()
                 while (rs.next()) {
-                    list.add(rs.getLong("webhook_id") to rs.getString("webhook_token"))
+                    list += WebhookInfo(
+                        rs.getLong("webhook_id"),
+                        rs.getString("webhook_token"),
+                        rs.getLong("created_user_id"),
+                    )
                 }
                 list
             }
         }
-    }.toKotlin()
+    }.toMemoizeFunction<Long, List<WebhookInfo>>()
 
-    val getGuildIdByChannelId: (Long) -> Long? = Functions.memoize<Long, Long>(1000 * 60) { channelId ->
+    val getGuildIdByChannelId = Functions.memoize<Long, Long>(1000 * 60) { channelId ->
         query("SELECT `guild_id` FROM `channels` WHERE `channel_id` = ?") {
             it.setLong(1, channelId)
             it.executeQuery().use { rs ->
@@ -58,9 +63,9 @@ object DatabaseManager {
                 }
             }
         }
-    }.toKotlin()
+    }.toMemoizeFunction<Long, Long?>()
 
-    val getMinecraftUUIDByDiscordId: (Long) -> UUID? = Functions.memoize<Long, UUID>(1000 * 30) { discordId ->
+    val getMinecraftUUIDByDiscordId = Functions.memoize<Long, UUID>(1000 * 30) { discordId ->
         query("SELECT `minecraft_uuid` FROM `users` WHERE `discord_id` = ?") {
             it.setLong(1, discordId)
             it.executeQuery().use { rs ->
@@ -71,7 +76,7 @@ object DatabaseManager {
                 }
             }
         }
-    }.toKotlin()
+    }.toMemoizeFunction<Long, UUID?>()
 
     inline fun <R> query(@Language("SQL") sql: String, block: (PreparedStatement) -> R): R =
         dataSource.connection.use { connection ->
