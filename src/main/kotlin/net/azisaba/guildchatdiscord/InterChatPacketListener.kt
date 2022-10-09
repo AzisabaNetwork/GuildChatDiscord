@@ -6,6 +6,7 @@ import dev.kord.rest.request.RestRequestException
 import dev.kord.rest.service.RestClient
 import kotlinx.coroutines.runBlocking
 import net.azisaba.guildchatdiscord.util.DatabaseManager
+import net.azisaba.interchat.api.guild.GuildMember
 import net.azisaba.interchat.api.network.PacketListener
 import net.azisaba.interchat.api.network.protocol.GuildMessagePacket
 import net.azisaba.interchat.api.text.MessageFormatter
@@ -29,17 +30,19 @@ object InterChatPacketListener : PacketListener {
             if (guild == null || user == null || guild.deleted()) {
                 return@collectAsync
             }
+            val members = guild.members.join()
+            val nickname = members.stream().filter { it.uuid() == user.id() }.findAny().map(GuildMember::nickname)
             val formattedText = MessageFormatter.format(
                 guild.format(),
                 guild,
                 packet.server(),
                 user,
+                nickname.orElse(null),
                 packet.message(),
                 packet.transliteratedMessage(),
             )
             val formattedComponent = LEGACY_COMPONENT_SERIALIZER.deserialize(formattedText)
             val plainText = PLAIN_TEXT_COMPONENT_SERIALIZER.serialize(formattedComponent)
-            val members = guild.members.join()
             DatabaseManager.getWebhooksByGuildId(packet.guildId()).forEach { info ->
                 InterChatDiscord.asyncExecutor.execute {
                     runBlocking {

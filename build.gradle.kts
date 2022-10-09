@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "net.azisaba"
-version = "2.0.0"
+version = "2.1.0"
 
 repositories {
     mavenCentral()
@@ -22,7 +22,7 @@ dependencies {
     implementation("org.mariadb.jdbc:mariadb-java-client:3.0.8")
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("com.charleskorn.kaml:kaml:0.47.0") // YAML support for kotlinx.serialization
-    implementation("net.azisaba.interchat:api:2.0.0-SNAPSHOT")
+    implementation("net.azisaba.interchat:api:2.1.0")
     // ByteBuf
     implementation("io.netty:netty-buffer:4.1.82.Final")
     // Support for minecraft chat components
