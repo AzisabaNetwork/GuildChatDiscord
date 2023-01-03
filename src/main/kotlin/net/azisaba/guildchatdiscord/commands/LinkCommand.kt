@@ -41,18 +41,18 @@ object LinkCommand : CommandHandler {
             defer.respond { content = "コードが無効です。" }
             return
         }
-        val discordId = DatabaseManager.query("SELECT `discord_id` FROM `users` WHERE `link_code` = ?") { stmt ->
+        val discordIdAndExpiresAt = DatabaseManager.query("SELECT `discord_id`, `expires_at` FROM `users` WHERE `link_code` = ?") { stmt ->
             stmt.setString(1, code)
             stmt.executeQuery().use { rs ->
                 if (rs.next()) {
-                    rs.getLong("discord_id")
+                    Pair(rs.getLong("discord_id"), rs.getLong("expires_at"))
                 } else {
-                    -1L
+                    Pair(-1L, 0L)
                 }
             }
         }
-        if (discordId != -1L) {
-            // already linked
+        if (discordIdAndExpiresAt.first != -1L || discordIdAndExpiresAt.second < System.currentTimeMillis()) {
+            // already linked or expired
             defer.respond { content = "コードが無効です。" }
             return
         }

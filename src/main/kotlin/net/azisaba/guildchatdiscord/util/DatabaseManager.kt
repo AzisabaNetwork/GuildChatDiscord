@@ -20,6 +20,7 @@ object DatabaseManager {
                 `minecraft_uuid` VARCHAR(36) NOT NULL UNIQUE,
                 `minecraft_name` VARCHAR(16) NOT NULL,
                 `link_code` VARCHAR(8) NOT NULL UNIQUE,
+                `expires_at` BIGINT NOT NULL DEFAULT 0,
                 PRIMARY KEY (`id`)
             )
         """.trimIndent()) { it.executeUpdate() }
