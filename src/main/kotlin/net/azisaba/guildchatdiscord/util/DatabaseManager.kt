@@ -16,7 +16,7 @@ object DatabaseManager {
         query("""
             CREATE TABLE IF NOT EXISTS `users` (
                 `id` BIGINT NOT NULL AUTO_INCREMENT,
-                `discord_id` BIGINT NOT NULL UNIQUE DEFAULT -1,
+                `discord_id` BIGINT NOT NULL DEFAULT -1,
                 `minecraft_uuid` VARCHAR(36) NOT NULL UNIQUE,
                 `minecraft_name` VARCHAR(16) NOT NULL,
                 `link_code` VARCHAR(8) NOT NULL UNIQUE,
