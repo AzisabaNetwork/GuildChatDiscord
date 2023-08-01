@@ -51,8 +51,12 @@ suspend fun main() {
         val minecraftUuid = DatabaseManager.getMinecraftUUIDByDiscordId(message.author!!.id.value.toLong()) ?: return@on
         // return if the author is not member of the guild
         InterChatDiscord.guildManager.getMember(guildId, minecraftUuid).exceptionally { null }.join() ?: return@on
+
+        var content = message.content
+        if (message.attachments.isNotEmpty()) content += "\n"
+        message.attachments.forEach { content += "${it.url}\n" }
         // send packet
-        val packet = GuildMessagePacket(guildId, "Discord", minecraftUuid, message.content, null)
+        val packet = GuildMessagePacket(guildId, "Discord", minecraftUuid, content.trim('\n'), null)
         JedisBoxProvider.get().pubSubHandler.publish(Protocol.GUILD_MESSAGE.name, packet)
     }
 
