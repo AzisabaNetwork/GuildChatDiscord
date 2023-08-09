@@ -67,8 +67,8 @@ object LinkCommand : CommandHandler {
     }
 
     override fun register(builder: GlobalMultiApplicationCommandBuilder) {
-        builder.input("link", "Link the Minecraft account") {
-            string("code", "Code that you got from the Minecraft server") {
+        builder.input("link", "Minecraftアカウントを連携します") {
+            string("code", "サーバー内から入手したコード") {
                 required = true
             }
         }

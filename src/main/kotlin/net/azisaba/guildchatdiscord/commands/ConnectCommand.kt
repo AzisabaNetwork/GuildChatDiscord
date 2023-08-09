@@ -8,6 +8,7 @@ import dev.kord.core.entity.interaction.ApplicationCommandInteraction
 import dev.kord.rest.builder.interaction.GlobalMultiApplicationCommandBuilder
 import dev.kord.rest.builder.interaction.string
 import net.azisaba.guildchatdiscord.InterChatDiscord
+import net.azisaba.guildchatdiscord.getMinecraftIdName
 import net.azisaba.guildchatdiscord.util.DatabaseManager
 import net.azisaba.guildchatdiscord.util.optString
 import net.azisaba.interchat.api.user.User
@@ -21,18 +22,8 @@ object ConnectCommand : CommandHandler {
             defer.respond { content = "BotがこのチャンネルにWebhookを作成する権限がありません。" }
             return
         }
-        val minecraftUuid = DatabaseManager.query("SELECT `minecraft_uuid` FROM `users` WHERE `discord_id` = ?") {
-            it.setLong(1, interaction.user.id.value.toLong())
-            it.executeQuery().use { rs ->
-                if (rs.next()) {
-                    UUID.fromString(rs.getString("minecraft_uuid"))
-                } else {
-                    null
-                }
-            }
-        }
-        if (minecraftUuid == null) {
-            defer.respond { content = "Minecraftアカウントと連携されていません。" }
+        val (minecraftUuid) = interaction.user.getMinecraftIdName() ?: run {
+            defer.respond { content = "Minecraftアカウントが連携されていません。" }
             return
         }
         val user: User = InterChatDiscord.userManager.fetchUser(minecraftUuid).join()
@@ -84,10 +75,10 @@ object ConnectCommand : CommandHandler {
     }
 
     override fun register(builder: GlobalMultiApplicationCommandBuilder) {
-        builder.input("connect", "Connect the guild chat") {
+        builder.input("connect", "ギルドチャットを連携します") {
             dmPermission = false
             defaultMemberPermissions = Permissions(Permission.ManageWebhooks)
-            string("guild", "Guild name") {
+            string("guild", "ギルド名") {
                 required = true
             }
         }

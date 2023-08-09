@@ -9,10 +9,7 @@ import dev.kord.core.on
 import dev.kord.gateway.Intent
 import dev.kord.gateway.Intents
 import dev.kord.gateway.PrivilegedIntent
-import net.azisaba.guildchatdiscord.commands.ConnectCommand
-import net.azisaba.guildchatdiscord.commands.LinkCommand
-import net.azisaba.guildchatdiscord.commands.UnconnectCommand
-import net.azisaba.guildchatdiscord.commands.UnlinkCommand
+import net.azisaba.guildchatdiscord.commands.*
 import net.azisaba.guildchatdiscord.util.DatabaseManager
 import net.azisaba.interchat.api.InterChatProviderProvider
 import net.azisaba.interchat.api.network.Protocol
@@ -27,6 +24,7 @@ private val commandHandlers = mutableMapOf(
     "unlink" to UnlinkCommand,
     "connect" to ConnectCommand,
     "unconnect" to UnconnectCommand,
+    "nickname" to NickCommand,
 )
 
 @OptIn(PrivilegedIntent::class)

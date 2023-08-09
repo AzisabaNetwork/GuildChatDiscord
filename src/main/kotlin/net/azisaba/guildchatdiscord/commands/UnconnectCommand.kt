@@ -48,7 +48,7 @@ object UnconnectCommand : CommandHandler {
     }
 
     override fun register(builder: GlobalMultiApplicationCommandBuilder) {
-        builder.input("unconnect", "Removes the integration with the guild chat.") {
+        builder.input("unconnect", "ギルドチャットの連携を解除します") {
             dmPermission = false
             defaultMemberPermissions = Permissions(Permission.ManageWebhooks)
         }

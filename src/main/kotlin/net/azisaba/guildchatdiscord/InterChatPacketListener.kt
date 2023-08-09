@@ -40,6 +40,7 @@ object InterChatPacketListener : PacketListener {
                 nickname.orElse(null),
                 packet.message(),
                 packet.transliteratedMessage(),
+                emptyMap(), // TODO: support prefix and suffix
             )
             val formattedComponent = LEGACY_COMPONENT_SERIALIZER.deserialize(formattedText)
             val plainText = PLAIN_TEXT_COMPONENT_SERIALIZER.serialize(formattedComponent)

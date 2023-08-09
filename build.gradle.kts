@@ -5,11 +5,11 @@ plugins {
 }
 
 group = "net.azisaba"
-version = "2.1.4"
+version = "2.2.0"
 
 repositories {
     mavenCentral()
-    maven { url = uri("https://repo.acrylicstyle.xyz/repository/maven-public/") }
+    maven { url = uri("https://repo.azisaba.net/repository/maven-public/") }
 }
 
 java.toolchain.languageVersion.set(JavaLanguageVersion.of(17))
@@ -22,7 +22,7 @@ dependencies {
     implementation("org.mariadb.jdbc:mariadb-java-client:3.0.8")
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("com.charleskorn.kaml:kaml:0.47.0") // YAML support for kotlinx.serialization
-    implementation("net.azisaba.interchat:api:2.1.2")
+    implementation("net.azisaba.interchat:api:2.4.1-SNAPSHOT")
     // ByteBuf
     implementation("io.netty:netty-buffer:4.1.82.Final")
     // Support for minecraft chat components
