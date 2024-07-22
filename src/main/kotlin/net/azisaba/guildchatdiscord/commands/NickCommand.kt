@@ -26,7 +26,7 @@ object NickCommand : CommandHandler {
             return
         }
         val oldMember = guild.getMember(uuid).join()
-        val newMember = GuildMember(oldMember.guildId(), oldMember.uuid(), oldMember.role(), newName)
+        val newMember = GuildMember(oldMember.guildId(), oldMember.uuid(), oldMember.role(), newName, oldMember.hiddenByMember())
         newMember.update()
         interaction.respondEphemeral { content = "ニックネームを `$newName` に変更しました。" }
     }

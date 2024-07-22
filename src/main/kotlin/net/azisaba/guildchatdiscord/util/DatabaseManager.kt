@@ -3,12 +3,21 @@ package net.azisaba.guildchatdiscord.util
 import net.azisaba.guildchatdiscord.BotConfig
 import net.azisaba.interchat.api.util.Functions
 import net.azisaba.interchat.api.util.QueryExecutor
+import net.azisaba.interchat.api.util.SQLThrowableConsumer
 import org.intellij.lang.annotations.Language
 import java.sql.PreparedStatement
+import java.sql.Statement
 import java.util.UUID
 
 object DatabaseManager {
-    val interChatQueryExecutor = QueryExecutor { sql, action -> queryInterChat(sql) { stmt -> action.accept(stmt) } }
+    val interChatQueryExecutor = object : QueryExecutor {
+        override fun query(sql: String, action: SQLThrowableConsumer<PreparedStatement>) {
+        }
+
+        override fun queryWithGeneratedKeys(sql: String, action: SQLThrowableConsumer<PreparedStatement>) {
+            queryInterChat(sql, true) { stmt -> action.accept(stmt) }
+        }
+    }
     val dataSource = BotConfig.instance.database.createDataSource()
     private val interChatDataSource = BotConfig.instance.interChatDatabase.createDataSource()
 
@@ -89,9 +98,13 @@ object DatabaseManager {
         interChatDataSource.close()
     }
 
-    private inline fun queryInterChat(@Language("SQL") sql: String, block: (PreparedStatement) -> Unit) {
+    private inline fun queryInterChat(@Language("SQL") sql: String, withGeneratedKeys: Boolean = false, block: (PreparedStatement) -> Unit) {
         interChatDataSource.connection.use { connection ->
-            connection.prepareStatement(sql).use(block)
+            if (withGeneratedKeys) {
+                connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS).use(block)
+            } else {
+                connection.prepareStatement(sql).use(block)
+            }
         }
     }
 }

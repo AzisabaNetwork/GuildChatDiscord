@@ -6,8 +6,11 @@ import dev.kord.rest.request.RestRequestException
 import dev.kord.rest.service.RestClient
 import kotlinx.coroutines.runBlocking
 import net.azisaba.guildchatdiscord.util.DatabaseManager
+import net.azisaba.interchat.api.data.PlayerPosData
+import net.azisaba.interchat.api.data.SenderInfo
 import net.azisaba.interchat.api.guild.GuildMember
 import net.azisaba.interchat.api.network.PacketListener
+import net.azisaba.interchat.api.network.RedisKeys
 import net.azisaba.interchat.api.network.protocol.GuildMessagePacket
 import net.azisaba.interchat.api.text.MessageFormatter
 import net.azisaba.interchat.api.util.AsyncUtil
@@ -32,12 +35,16 @@ object InterChatPacketListener : PacketListener {
             }
             val members = guild.members.join()
             val nickname = members.stream().filter { it.uuid() == user.id() }.findAny().map(GuildMember::nickname)
+            val pos = try {
+                JedisBoxProvider.get()[RedisKeys.azisabaReportPlayerPos(user.id()), PlayerPosData.NETWORK_CODEC, 1000].toWorldPos()
+            } catch (_: Exception) {
+                null
+            }
+            val senderInfo = SenderInfo(user, packet.server(), nickname.orElse(null), pos)
             val formattedText = MessageFormatter.format(
                 guild.format(),
                 guild,
-                packet.server(),
-                user,
-                nickname.orElse(null),
+                senderInfo,
                 packet.message(),
                 packet.transliteratedMessage(),
                 emptyMap(), // TODO: support prefix and suffix
