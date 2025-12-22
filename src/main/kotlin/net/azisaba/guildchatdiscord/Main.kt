@@ -1,4 +1,5 @@
 @file:JvmName("MainKt")
+
 package net.azisaba.guildchatdiscord
 
 import dev.kord.core.Kord
@@ -19,17 +20,18 @@ import java.io.File
 
 private val logger = LoggerFactory.getLogger("GuildChatDiscord")
 
-private val commandHandlers = mutableMapOf(
-    "link" to LinkCommand,
-    "unlink" to UnlinkCommand,
-    "connect" to ConnectCommand,
-    "unconnect" to UnconnectCommand,
-    "nickname" to NickCommand,
-)
+private val commandHandlers =
+    mutableMapOf(
+        "link" to LinkCommand,
+        "unlink" to UnlinkCommand,
+        "connect" to ConnectCommand,
+        "unconnect" to UnconnectCommand,
+        "nickname" to NickCommand,
+    )
 
 @OptIn(PrivilegedIntent::class)
 suspend fun main() {
-    BotConfig.loadConfig(File("."))
+    BotConfig.loadConfig(File("./config"))
     logger.info("Connecting to Redis")
     JedisBoxProvider.get()
     logger.info("Connecting to database")
@@ -46,9 +48,17 @@ suspend fun main() {
     client.on<MessageCreateEvent> {
         if (message.author?.isBot != false) return@on
         val guildId = DatabaseManager.getGuildIdByChannelId(message.channelId.value.toLong()) ?: return@on
-        val minecraftUuid = DatabaseManager.getMinecraftUUIDByDiscordId(message.author!!.id.value.toLong()) ?: return@on
+        val minecraftUuid =
+            DatabaseManager.getMinecraftUUIDByDiscordId(
+                message.author!!
+                    .id.value
+                    .toLong(),
+            ) ?: return@on
         // return if the author is not member of the guild
-        InterChatDiscord.guildManager.getMember(guildId, minecraftUuid).exceptionally { null }.join() ?: return@on
+        InterChatDiscord.guildManager
+            .getMember(guildId, minecraftUuid)
+            .exceptionally { null }
+            .join() ?: return@on
 
         var content = message.content
         if (message.attachments.isNotEmpty()) content += "\n"
@@ -68,11 +78,12 @@ suspend fun main() {
     }
 
     client.login {
-        intents = Intents(
-            Intent.DirectMessages,
-            Intent.MessageContent, // Privileged intent
-            Intent.GuildMessages,
-        )
+        intents =
+            Intents(
+                Intent.DirectMessages,
+                Intent.MessageContent, // Privileged intent
+                Intent.GuildMessages,
+            )
     }
 
     // After logout/shutdown
