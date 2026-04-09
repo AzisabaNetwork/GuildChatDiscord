@@ -7,4 +7,4 @@ RUN ./gradlew shadowJar --no-daemon
 FROM eclipse-temurin:17-jre AS runner
 WORKDIR /app
 COPY --from=builder /app/build/libs/GuildChatDiscord.jar .
-ENTRYPOINT [ "java", "-jar", "GuildChatDiscord.jar"]
+CMD [ "java", "-jar", "GuildChatDiscord.jar"]
