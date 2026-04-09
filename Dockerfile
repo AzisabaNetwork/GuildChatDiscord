@@ -1,10 +1,10 @@
-FROM eclipse-temurin:17-jre AS builder
+FROM eclipse-temurin:21 AS builder
 WORKDIR /app
 COPY . .
 RUN chmod +x gradlew
 RUN ./gradlew shadowJar --no-daemon
 
-FROM eclipse-temurin:17-jre AS runner
+FROM eclipse-temurin:21-jre AS runner
 WORKDIR /app
-COPY --from=builder /app/build/libs/GuildChatDiscord.jar .
-CMD [ "java", "-jar", "GuildChatDiscord.jar"]
+COPY --from=builder /app/build/libs/GuildChatDiscord.jar /
+CMD [ "java", "-jar", "/GuildChatDiscord.jar"]
