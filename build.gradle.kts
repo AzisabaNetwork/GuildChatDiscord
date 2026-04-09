@@ -1,7 +1,7 @@
 plugins {
-    kotlin("jvm") version "1.7.10"
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.7.10"
-    id("com.github.johnrengelman.shadow") version "7.0.0"
+    kotlin("jvm") version "2.3.20"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.3.20"
+    id("com.gradleup.shadow") version "9.4.1"
 }
 
 group = "net.azisaba"
@@ -9,15 +9,19 @@ version = "2.2.0"
 
 repositories {
     mavenCentral()
-    maven { url = uri("https://repo.azisaba.net/repository/maven-public/") }
+    maven("https://repo.azisaba.net/repository/maven-public/") {
+        name = "azisaba-repo"
+    }
 }
 
-java.toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+kotlin {
+    jvmToolchain(21)
+}
 
 dependencies {
     val adventureVersion = "4.11.0"
     implementation(kotlin("stdlib"))
-    implementation("dev.kord:kord-core:0.8.0-M16")
+    implementation("dev.kord:kord-core:0.18.1")
     implementation("org.slf4j:slf4j-simple:2.0.1")
     implementation("org.mariadb.jdbc:mariadb-java-client:3.0.8")
     implementation("com.zaxxer:HikariCP:5.0.1")
@@ -30,12 +34,6 @@ dependencies {
 }
 
 tasks {
-    compileKotlin {
-        kotlinOptions {
-            freeCompilerArgs = listOf("-opt-in=kotlin.RequiresOptIn")
-        }
-    }
-
     shadowJar {
         manifest {
             attributes(
